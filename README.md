@@ -1,5 +1,5 @@
 # MudraMingle
-MudraMingle uses Flask, OpenCV, MediaPipe, and CVZone to uncover Bharatanatyam's heart—the mudras. Employing machine learning, it interprets these vital hand gestures, essential to the classical dance form
+
 MudraMingle is an innovative project focused on leveraging machine learning (ML) to delve into the art of Bharatanatyam through mudras—traditional hand gestures integral to this classical dance form. This Flask-based application employs computer vision using OpenCV, MediaPipe, and CVZone to detect and interpret various mudras made by the dancer's hands. The real-time visualization of recognized mudras assists in learning and practicing the intricate gestures involved in Bharatanatyam, providing insights into their meanings and significance.
 
 

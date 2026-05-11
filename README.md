@@ -1,61 +1,159 @@
 # MudraMingle
 
-MudraMingle is an innovative project focused on leveraging machine learning (ML) to delve into the art of Bharatanatyam through mudras—traditional hand gestures integral to this classical dance form. This Flask-based application employs computer vision using OpenCV, MediaPipe, and CVZone to detect and interpret various mudras made by the dancer's hands. The real-time visualization of recognized mudras assists in learning and practicing the intricate gestures involved in Bharatanatyam, providing insights into their meanings and significance.
+**MudraMingle** is a Flask-based web application that uses computer vision to detect and interpret **Bharatanatyam mudras** — the traditional hand gestures of Indian classical dance — in real time from a webcam feed.
 
+It is designed as a learning aid: as a dancer performs a mudra in front of the camera, the application identifies the gesture, overlays the hand skeleton on the video, and displays the mudra's name, Devanagari script, and traditional meaning on screen.
 
-**Key Features**:
+---
 
-Real-time hand gesture recognition using computer vision techniques.
-Detection and visualization of Bharatanatyam mudras on a live webcam feed.
-Analysis and interpretation of recognized mudras with detailed descriptions.
-Email functionality to share detected mudras and practice sessions.
-Usage:
-The application utilizes a Flask web server to display the webcam feed and recognize hand gestures. Users can visit the web interface to interact with the system, explore detected mudras, and practice Bharatanatyam mudras with real-time feedback.
+## Table of Contents
 
+- [Features](#features)
+- [How It Works](#how-it-works)
+- [Supported Mudras](#supported-mudras)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Installation](#installation)
+- [Running the App](#running-the-app)
+- [Usage](#usage)
+- [Email Feature Setup](#email-feature-setup)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-**Dependencies**:
+---
 
-1.Python 3.x
+## Features
 
-2.Flask
+- **Real-time hand tracking** using MediaPipe's 21-landmark hand model.
+- **Recognition of 16 Bharatanatyam mudras** based on finger positions and inter-fingertip distances.
+- **Live webcam streaming** through a Flask web interface (MJPEG video feed).
+- **On-screen mudra info card** showing the mudra's display name, Devanagari script, emoji, and a short description of its symbolism.
+- **Email summary** — users can email themselves the list of mudras they practiced in a session.
 
-3.OpenCV
+## How It Works
 
-4.MediaPipe
+1. OpenCV captures frames from the webcam.
+2. MediaPipe Hands extracts 21 landmarks per detected hand.
+3. The app derives two signals from those landmarks:
+   - **Finger states** — whether each of the 5 fingers is extended or folded.
+   - **Inter-tip distances** — Euclidean distances between fingertip pairs (thumb–index, index–middle, etc.).
+4. A rule-based classifier matches the current pose against patterns for each mudra.
+5. The recognized mudra name is exposed via the `/current_mudra` JSON endpoint, which the frontend polls to update the info card.
 
-5.CVZone
+## Supported Mudras
 
+The app currently recognizes the following 16 single-hand (*asamyukta hasta*) mudras:
 
-<p align="left">
-  <a href="https://www.python.org" target="_blank" rel="noreferrer">
-    <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="40" height="40"/>
-  </a>
-  <a href="https://opencv.org/" target="_blank" rel="noreferrer">
-    <img src="https://www.vectorlogo.zone/logos/opencv/opencv-icon.svg" alt="opencv" width="40" height="40"/>
-  </a>
-  <a href="https://flask.palletsprojects.com/" target="_blank" rel="noreferrer">
-    <img src="https://www.vectorlogo.zone/logos/pocoo_flask/pocoo_flask-icon.svg" alt="flask" width="40" height="40"/>
-  </a>
-</p>
+| # | Mudra | Devanagari | Meaning |
+|---|-------|------------|---------|
+| 1 | Patāka | पताका | Flag — clouds, forest, river, blessing |
+| 2 | Tripatāka | त्रिपताक | Three parts of a flag — crown, tree, arrow |
+| 3 | Śikhara | शिखर | Spire — bow, pillar, silence |
+| 4 | Ardhapatāka | अर्धपताक | Half flag — leaves, riverbank, tower |
+| 5 | Karthārīmukha | कर्तरीमुख | Scissors face — separation, lightning |
+| 6 | Mayūra | मयूर | Peacock's beak — omens, wiping tears |
+| 7 | Ardhachandra | अर्धचन्द्र | Half moon — moon, plate |
+| 8 | Arāla | अराल | Bent — drinking nectar, holy water |
+| 9 | Kaṭakāmukha | कटकामुख | Link in a chain — picking flowers, holding a mirror |
+| 10 | Siṁhamukha | सिंहमुख | Lion face — hare, lotus, deer |
+| 11 | Kapittha | कपित्थ | Wood apple — Lakshmī, Sarasvatī, cymbals |
+| 12 | Muṣṭi | मुष्टि | Fist — grasping, wrestling, steadfastness |
+| 13 | Sūchī | सूचि | Needle — oneness, the sun, threading |
+| 14 | Chandrakalā | चन्द्रकला | Crescent moon — the moon, the face |
+| 15 | Mṛgaśīrṣa | मृगशीर्ष | Deer head — deer, a graceful woman |
+| 16 | Alapadma | अलपद्म | Lotus in full bloom — beauty, longing |
 
-**Instructions**:
+## Tech Stack
 
-1.Clone the repository.
+- **Python 3.x**
+- **Flask** — web server and routing
+- **OpenCV** — webcam capture and frame rendering
+- **MediaPipe** — hand landmark detection
+- **NumPy** — numerical operations on landmark data
+- **smtplib / email.message** — optional email 
 
-2.Install the required dependencies.
+## Project Structure
 
-3.Run the Flask application.
+```
+app/
+├── app.py              # Flask app, video stream, mudra detection logic
+├── requirements.txt    # Python dependencies
+├── templates/
+│   └── index.html      # Main UI rendered by Flask
+├── web/
+│   └── index.html      # Static landing page (GitHub Pages)
+├── LICENSE
+└── README.md
+```
 
-4.Interact with the web interface to view and practice Bharatanatyam mudras.
+## Installation
 
+**1. Clone the repository**
 
+```bash
+git clone https://github.com/<your-username>/MudraMingle.git
+cd MudraMingle/app
+```
 
+**2. Create and activate a virtual environment** (recommended)
 
-**Sample Output**
-:![Screenshot 2023-12-26 231705](https://github.com/sannidhayj20/MudraMingle/assets/76656957/5ee12ebc-3ce7-4f83-8922-06e0859838bf)
-![Screenshot 2023-12-26 231640](https://github.com/sannidhayj20/MudraMingle/assets/76656957/ccc0a5c8-af29-4a0b-8aef-9beb027b11d4)
-![Screenshot 2023-12-26 231622](https://github.com/sannidhayj20/MudraMingle/assets/76656957/1ac83fe9-6c22-4e8e-99fa-0d86ef3a4ab1)
-![Screenshot 2023-12-26 231723](https://github.com/sannidhayj20/MudraMingle/assets/76656957/63f057c0-b390-4697-809e-799a8664b22d)
-![Screenshot 2023-12-26 232213](https://github.com/sannidhayj20/MudraMingle/assets/76656957/9354745e-5b40-459c-bbef-7031d3578629)
+```bash
+# Windows (PowerShell)
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 
+# macOS / Linux
+python3 -m venv venv
+source venv/bin/activate
+```
 
+**3. Install dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+## Running the App
+
+```bash
+python app.py
+```
+
+The Flask server will start on `http://127.0.0.1:5000/`. Open that URL in your browser, allow camera access, and the live webcam feed will begin streaming with mudra recognition overlays.
+
+Press `q` in the OpenCV preview window (or close the browser tab) to stop the session.
+
+## Usage
+
+1. Stand in front of the webcam with good, even lighting.
+2. Keep one hand clearly visible within the frame.
+3. Form a Bharatanatyam mudra — the app will:
+   - Draw the hand skeleton overlay.
+   - Identify the mudra and display its name, script, and meaning.
+4. Practice multiple mudras in sequence — each detected one is recorded for the session summary.
+5. Optionally, enter your email to receive a list of mudras practiced.
+
+## Email Feature Setup
+
+The `/send_email` route uses Gmail's SMTP server. To enable it:
+
+1. Open `app.py` and locate the `send_email` function.
+2. Replace the sender email and app password with your own:
+   ```python
+   msg['From'] = "your-email@gmail.com"
+   smtp.login("your-email@gmail.com", "<your-app-password>")
+   ```
+3. Use a [Gmail App Password](https://myaccount.google.com/apppasswords) — *not* your account password.
+
+> **Security note:** Never commit credentials to version control. Prefer loading them from environment variables.
+
+## Roadmap
+
+- Support for two-handed (*samyukta hasta*) mudras.
+- Replace rule-based classification with an ML model trained on labeled mudra images.
+- Dance form classification across the 8 Indian classical dance styles: Bharatanatyam, Kathak, Kathakali, Kuchipudi, Manipuri, Mohiniyattam, Odissi, and Sattriya.
+- Practice mode with target mudras and accuracy scoring.
+
+## License
+
+This project is licensed under the terms of the [LICENSE](LICENSE) file included in the repository.

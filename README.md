@@ -16,7 +16,6 @@ It is designed as a learning aid: as a dancer performs a mudra in front of the c
 - [Installation](#installation)
 - [Running the App](#running-the-app)
 - [Usage](#usage)
-- [Email Feature Setup](#email-feature-setup)
 - [Roadmap](#roadmap)
 - [License](#license)
 
@@ -28,7 +27,6 @@ It is designed as a learning aid: as a dancer performs a mudra in front of the c
 - **Recognition of 16 Bharatanatyam mudras** based on finger positions and inter-fingertip distances.
 - **Live webcam streaming** through a Flask web interface (MJPEG video feed).
 - **On-screen mudra info card** showing the mudra's display name, Devanagari script, emoji, and a short description of its symbolism.
-- **Email summary** — users can email themselves the list of mudras they practiced in a session.
 
 ## How It Works
 
@@ -70,7 +68,6 @@ The app currently recognizes the following 16 single-hand (*asamyukta hasta*) mu
 - **OpenCV** — webcam capture and frame rendering
 - **MediaPipe** — hand landmark detection
 - **NumPy** — numerical operations on landmark data
-- **smtplib / email.message** — optional email 
 
 ## Project Structure
 
@@ -130,22 +127,7 @@ Press `q` in the OpenCV preview window (or close the browser tab) to stop the se
 3. Form a Bharatanatyam mudra — the app will:
    - Draw the hand skeleton overlay.
    - Identify the mudra and display its name, script, and meaning.
-4. Practice multiple mudras in sequence — each detected one is recorded for the session summary.
-5. Optionally, enter your email to receive a list of mudras practiced.
-
-## Email Feature Setup
-
-The `/send_email` route uses Gmail's SMTP server. To enable it:
-
-1. Open `app.py` and locate the `send_email` function.
-2. Replace the sender email and app password with your own:
-   ```python
-   msg['From'] = "your-email@gmail.com"
-   smtp.login("your-email@gmail.com", "<your-app-password>")
-   ```
-3. Use a [Gmail App Password](https://myaccount.google.com/apppasswords) — *not* your account password.
-
-> **Security note:** Never commit credentials to version control. Prefer loading them from environment variables.
+4. Practice multiple mudras in sequence.
 
 ## Roadmap
 

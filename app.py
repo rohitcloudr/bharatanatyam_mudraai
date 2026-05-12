@@ -1,11 +1,9 @@
-from flask import Flask, render_template, Response, request, redirect, url_for, jsonify
+from flask import Flask, render_template, Response, jsonify
 import cv2
 import mediapipe
 from math import hypot
 import numpy as np
 import matplotlib.pyplot as plt
-from email.message import EmailMessage
-import smtplib
 
 
 
@@ -75,8 +73,6 @@ lengthmidrinlist = []
 lengthrinpinlist = []
 lengthrinthulist = []
 lengthmidthulist = []
-email_list = []
-final_list = []
 
 current_mudra_name = None
 
@@ -165,71 +161,55 @@ def generate_frames():
 
             ##1
             if finger[1] == 1 and finger[0] == 1 and finger[2]==1 and finger[3] == 1 and finger[4]==1 and lengththind<150:
-                email_list.append("Pataka")
                 current_mudra_name = "Pataka"
             ##2
             if finger[1] == 1 and finger[2]==1 and finger[3] == 0 and finger[4]==1 and lengthrinthu>40:
-                email_list.append("Tripataka")
                 current_mudra_name = "Tripataka"
 
             ##3
             if finger[0] == 1 and finger[1] == 0 and finger[2]==0 and finger[3] == 0 and finger[4]==0 :
-                email_list.append("Shikaram")
                 current_mudra_name = "Shikaram"
             ##4
             if finger[0] == 0 and finger[1] == 1 and finger[2]==1 and finger[3] == 0 and finger[4]==0 :
-                email_list.append("Ardhapataka")
                 current_mudra_name = "Ardhapataka"
             ##5
             if finger[0] == 0 and finger[1] == 1 and finger[2]==1 and finger[3] == 0 and finger[4]==0 and 19<=lengthindmid<=94  :
-                email_list.append("Kartharimukha")
                 current_mudra_name = "Kartharimukha"
 
             ##6
             if finger[1] == 1 and finger[2]==1 and finger[3] == 0 and finger[4]== 1 and 12<=lengthrinthu<=40  :
-                email_list.append("Mayura")
                 current_mudra_name = "Mayura"
             ##7
             if finger[1] == 1 and finger[0] == 1 and finger[2]==1 and finger[3] == 1 and finger[4]==1 and 150<=lengththind<=300:
-                email_list.append("Ardhachandra")
                 current_mudra_name = "Ardhachandra"
             ##8
             if finger[1] == 0 and finger[0] == 1 and finger[2]==1 and finger[3] == 1 and finger[4]==1 :
-                email_list.append("Arala")
                 current_mudra_name = "Arala"
             ##9
             if finger[3] == 1 and finger[4]==1 and 7<=lengthmidthu<= 40 and 5<=lengththind<= 30 and 10<=lengthindmid<=33:
-                email_list.append("Katamukaha")
                 current_mudra_name = "Katamukaha"
             ##10
             if finger[1] == 1 and finger[4  ]==1 and 3<=lengthrinthu<= 30 and 1<=lengthmidthu<=15 and 1<=lengthmidrin<=25:
-                email_list.append("Simhamukaha")
                 current_mudra_name = "Simhamukaha"
             ##11
             if finger[2] == 0 and finger[3  ]==0 and finger[4] ==0 and finger[0] == 1 and 10<=lengththind<=40:
-                email_list.append("Kapitha")
                 current_mudra_name = "Kapitha"
             ##12
             if finger[1] == 0 and finger[0] == 0 and finger[2]==0 and finger[3] == 0 and finger[4]==0 and 3<=lengththind<=15:
-                email_list.append("Mushti")
                 current_mudra_name = "Mushti"
             ##13
 
             if finger[1] == 1 and finger[0] == 0 and finger[2]==0 and finger[3] == 0 and finger[4]==0:
-                email_list.append("Soochi")
                 current_mudra_name = "Soochi"
             ##14
             if finger[1] == 1 and finger[0] == 1 and finger[2]==0 and finger[3] == 0 and finger[4]==0:
-                email_list.append("Chandrakala")
                 current_mudra_name = "Chandrakala"
             ##15
 
             if finger[1] == 0 and finger[0] == 1 and finger[2]==0 and finger[3] == 0 and finger[4]==1:
-                email_list.append("Mrigashirsha")
                 current_mudra_name = "Mrigashirsha"
             ##16
             if finger[1] == 1 and finger[0] == 1 and finger[2]==1 and finger[3] == 1 and finger[4]==0 and 30<=lengththind<=155 and 20<=lengthindmid<=70 and 10<=lengthmidrin<=120:
-                email_list.append("Alapadmakam")
                 current_mudra_name = "Alapadmakam"
 
 
@@ -248,33 +228,6 @@ def generate_frames():
 @app.route('/video_feed')
 def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-
-@app.route('/send_email', methods=['POST'])
-def send_email():
-    global email_list  # Make email_list accessible in this function
-    recipient_email = request.form.get("recipient_email")  # Get recipient's email from the form input
-
-    if not recipient_email:
-        return "Recipient's email is required."
-
-    if email_list:
-        final_list = list(set(email_list))  # Remove duplicates
-        final_result = "\n".join(final_list)
-
-        msg = EmailMessage()
-        msg["Subject"] = "Your Mudra Practice Session Details"
-        msg['From'] = "g11ascsannidhay.tws@gmail.com"
-        msg["To"] = recipient_email  # Use the recipient's email input
-        msg.set_content("The Mudras Detected and practiced are:\n" + final_result)
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login("g11ascsannidhay.tws@gmail.com", "")
-            smtp.send_message(msg)
-
-        return redirect(url_for('index'))  # Redirect back to the index page
-    else:
-        return "No mudras detected."
 
 
 if __name__ == '__main__':

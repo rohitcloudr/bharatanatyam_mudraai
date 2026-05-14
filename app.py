@@ -113,6 +113,8 @@ def generate_frames():
     global current_mudra_name
     while True:
         success, img = cap.read()
+        if not success or img is None:
+            continue
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         lmList = handLandmarks(imgRGB)
 
@@ -132,7 +134,7 @@ def generate_frames():
             lengthindmidlist.append(lengthindmid)
             lengthmidrin = hypot(x4 - x3, y4 - y3)  # Distance from Middle to Ring
             lengthmidrinlist.append(lengthmidrin)
-            lengthrinpin = hypot(x5 - x4, y5 - y5)  # Distance from Ring to pinky
+            lengthrinpin = hypot(x5 - x4, y5 - y4)  # Distance from Ring to pinky
             lengthrinpinlist.append(lengthrinpin)
             lengthrinthu = hypot(x4 - x1, y4 - y1)  # Distance from Ring to Thumb
             lengthrinthulist.append(lengthrinthu)

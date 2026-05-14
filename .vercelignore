@@ -1,4 +1,5 @@
 venv/
+.venv/
 __pycache__/
 *.pyc
 *.pyo
@@ -7,6 +8,10 @@ __pycache__/
 app.py
 templates/
 requirements.txt
+run.bat
+run.ps1
+*.bat
+*.ps1
 
 .github/
 .git/

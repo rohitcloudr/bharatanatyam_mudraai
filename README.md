@@ -1,4 +1,5 @@
 # MudraMingle
+#vE:\DT\app> .\.venv\Scripts\python.exe app.py
 
 **MudraMingle** is a Flask-based web application that uses computer vision to detect and interpret **Bharatanatyam mudras** — the traditional hand gestures of Indian classical dance — in real time from a webcam feed.
 

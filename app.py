@@ -2,17 +2,24 @@ from flask import Flask, render_template, Response, jsonify
 import cv2
 import mediapipe
 from math import hypot
-import numpy as np
-import matplotlib.pyplot as plt
 
 
 
 app = Flask(__name__)
 
-cap = cv2.VideoCapture(0)
+cap = None
 initHand = mediapipe.solutions.hands
 mainHand = initHand.Hands(min_detection_confidence=0.8, min_tracking_confidence=0.8)
 draw = mediapipe.solutions.drawing_utils
+
+
+def get_camera():
+    global cap
+    if cap is None or not cap.isOpened():
+        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            cap = cv2.VideoCapture(0)
+    return cap
 
 ACCENT_BGR  = (124, 168, 232)   # #e8a87c — warm peach accent
 SOFT_WHITE  = (238, 241, 243)   # #f3f1ee — off-white
@@ -67,13 +74,6 @@ def draw_fingertip_overlay(img, tips):
         cv2.circle(img, (px, py), 4, ACCENT_BGR,  -1, cv2.LINE_AA)
 
 
-lengththindlist = []
-lengthindmidlist = []
-lengthmidrinlist = []
-lengthrinpinlist = []
-lengthrinthulist = []
-lengthmidthulist = []
-
 current_mudra_name = None
 
 MUDRA_INFO = {
@@ -111,10 +111,13 @@ def current_mudra():
 
 def generate_frames():
     global current_mudra_name
+    camera = get_camera()
     while True:
-        success, img = cap.read()
+        success, img = camera.read()
         if not success or img is None:
+            camera = get_camera()
             continue
+        img = cv2.flip(img, 1)
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         lmList = handLandmarks(imgRGB)
 
@@ -128,38 +131,12 @@ def generate_frames():
 
             draw_fingertip_overlay(img, [(x1, y1), (x2, y2), (x3, y3), (x4, y4), (x5, y5)])
 
-            lengththind = hypot(x2 - x1, y2 - y1)  # Distance from thumb to index
-            lengththindlist.append(lengththind)
-            lengthindmid = hypot(x3 - x2, y3 - y2)  # Distance from index to middle
-            lengthindmidlist.append(lengthindmid)
-            lengthmidrin = hypot(x4 - x3, y4 - y3)  # Distance from Middle to Ring
-            lengthmidrinlist.append(lengthmidrin)
-            lengthrinpin = hypot(x5 - x4, y5 - y4)  # Distance from Ring to pinky
-            lengthrinpinlist.append(lengthrinpin)
-            lengthrinthu = hypot(x4 - x1, y4 - y1)  # Distance from Ring to Thumb
-            lengthrinthulist.append(lengthrinthu)
-            lengthmidthu = hypot(x3-x1,y3-y1)## Distance from Middle to Thumb
-            lengthmidthulist.append(lengthmidthu)
-            print("Calculation for Thumb to Index")
-            print("The average distance",np.mean(lengththindlist))
-            print("The Minimum Value",np.min(lengththindlist))
-            print("The Maximum Value",np.max(lengththindlist))
-            print("Calculation for Index to Middle")
-            print("The average distance",np.mean(lengthindmidlist))
-            print("The Minimum Value",np.min(lengthindmidlist))
-            print("The Maximum Value",np.max(lengthindmidlist))
-            print("Calculation for Middle to Ring")
-            print("The average distance",np.mean(lengthmidrinlist))
-            print("The Minimum Value",np.min(lengthmidrinlist))
-            print("The Maximum Value",np.max(lengthmidrinlist))
-            print("Calculation for Ring to Pinky")
-            print("The average distance",np.mean(lengthrinpinlist))
-            print("The Minimum Value",np.min(lengthrinpinlist))
-            print("The Maximum Value",np.max(lengthrinpinlist))
-            print("Calculation for Ring to Thumb")
-            print("The average distance",np.mean(lengthrinthulist))
-            print("The Minimum Value",np.min(lengthrinthulist))
-            print("The Maximum Value",np.max(lengthrinthulist))
+            lengththind = hypot(x2 - x1, y2 - y1)
+            lengthindmid = hypot(x3 - x2, y3 - y2)
+            lengthmidrin = hypot(x4 - x3, y4 - y3)
+            lengthrinpin = hypot(x5 - x4, y5 - y4)
+            lengthrinthu = hypot(x4 - x1, y4 - y1)
+            lengthmidthu = hypot(x3 - x1, y3 - y1)
 
             ##1
             if finger[1] == 1 and finger[0] == 1 and finger[2]==1 and finger[3] == 1 and finger[4]==1 and lengththind<150:
@@ -214,15 +191,9 @@ def generate_frames():
             if finger[1] == 1 and finger[0] == 1 and finger[2]==1 and finger[3] == 1 and finger[4]==0 and 30<=lengththind<=155 and 20<=lengthindmid<=70 and 10<=lengthmidrin<=120:
                 current_mudra_name = "Alapadmakam"
 
-
-
-
-            cv2.imshow("Webcam", img)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-
-
-        ret, buffer = cv2.imencode('.jpg', img)
+        ret, buffer = cv2.imencode('.jpg', img, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+        if not ret:
+            continue
         frame = buffer.tobytes()
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
@@ -233,4 +204,4 @@ def video_feed():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, threaded=True, use_reloader=False)

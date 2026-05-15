@@ -579,7 +579,7 @@
         import {
             HandLandmarker,
             FilesetResolver
-        } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.16/vision_bundle.mjs";
+        } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/vision_bundle.mjs";
 
         /* ======================== MUDRA REFERENCE ======================== */
         const MUDRA_INFO = {
@@ -826,23 +826,44 @@
         }
 
         async function initMediaPipe() {
-            const vision = await FilesetResolver.forVisionTasks(
-                "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.16/wasm"
-            );
-            handLandmarker = await HandLandmarker.createFromOptions(vision, {
-                baseOptions: {
-                    modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
-                    delegate: "GPU"
-                },
+            let vision;
+            try {
+                vision = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.35/wasm"
+                );
+            } catch (e) {
+                throw new Error('Could not load MediaPipe runtime from CDN. Check your internet connection or firewall. ' + (e.message || ''));
+            }
+
+            const baseOptions = {
+                modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task"
+            };
+            const opts = {
                 runningMode: "VIDEO",
                 numHands: 1,
                 minHandDetectionConfidence: 0.7,
                 minHandPresenceConfidence: 0.7,
                 minTrackingConfidence: 0.7
-            });
+            };
+
+            try {
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: { ...baseOptions, delegate: "GPU" },
+                    ...opts
+                });
+            } catch (gpuErr) {
+                console.warn('GPU delegate failed, falling back to CPU:', gpuErr);
+                handLandmarker = await HandLandmarker.createFromOptions(vision, {
+                    baseOptions: { ...baseOptions, delegate: "CPU" },
+                    ...opts
+                });
+            }
         }
 
         async function startCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera API not available. Open this page via http://localhost:8000 (not file://) using Chrome or Edge.');
+            }
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
                 audio: false
@@ -901,16 +922,20 @@
             $splashErr.style.display = 'none';
             $splash.classList.add('hidden');
             $loading.classList.remove('hidden');
+            let stage = 'model';
             try {
-                await Promise.all([initMediaPipe(), startCamera()]);
+                await initMediaPipe();
+                stage = 'camera';
+                await startCamera();
                 $loading.classList.add('hidden');
                 predictLoop();
             } catch (err) {
-                console.error(err);
-                let msg = 'Could not start. ';
-                if (err.name === 'NotAllowedError') msg += 'Camera permission was denied.';
+                console.error('[' + stage + ']', err);
+                let msg = (stage === 'model' ? 'Model load failed. ' : 'Camera failed. ');
+                if (err.name === 'NotAllowedError') msg += 'Camera permission was denied — click the camera icon in the address bar and allow it.';
                 else if (err.name === 'NotFoundError') msg += 'No camera detected.';
-                else msg += (err.message || 'Please try again.');
+                else if (err.name === 'NotReadableError') msg += 'Camera is in use by another app (Zoom/Teams/etc). Close it and retry.';
+                else msg += (err.message || err.name || 'Please try again.');
                 reportError(msg);
             }
         });
